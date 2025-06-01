@@ -2,35 +2,69 @@ import tkinter as tk
 from tkinter import *
 import colors as c #colors.py hold color palatte and font selection
 import random
+from PIL import Image, ImageTk  # for jpg support
+import subprocess
 
 
-# 1]__INITIAL SETUP:
+# 1]__INITIAL SETUP:  
 class Game(tk.Frame):
     def __init__(self):
-        ws=Tk()
-        tk.Frame.__init__(self)
+        self.ws = Tk()
+        Frame.__init__(self, self.ws)
         self.grid()
-        self.master.title("2048") #set title of window
-        #set the icon of window screen
-        image_icon=PhotoImage(file="logo.png")
-        ws.iconphoto(False,image_icon)
 
+        self.ws.title("2048")
+        self.ws.state('zoomed')  # ✅ Start maximized on Windows
 
-#outline of GUI which is 4x4 grid
-        self.main_grid=tk.Frame(
-            self,bg=c.GRID_COLOR,bd=3,width=600,height=600
-        )
-        self.main_grid.grid(pady=(100,0))#padding for score header
-        self.make_GUI()#calling back GUI
+        # Get screen width and height
+        screen_width = self.ws.winfo_screenwidth()
+        screen_height = self.ws.winfo_screenheight()
+
+        # Load and resize background image to screen size
+        bg_image = Image.open("play.jpg").resize((screen_width, screen_height), Image.Resampling.LANCZOS)
+        bg_photo = ImageTk.PhotoImage(bg_image)
+
+        # Set background image
+        bg_label = tk.Label(self.ws, image=bg_photo)
+        bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+
+        # Set icon
+        icon_img = Image.open("icon.jpg")
+        icon_photo = ImageTk.PhotoImage(icon_img)
+        self.ws.iconphoto(False, icon_photo)
+
+        
+        
+
+        # Main grid centered
+        self.main_grid = Frame(self.ws, bg="#654321", width=600, height=600)##C19A6B #333333
+
+        self.main_grid.place(relx=0.5, rely=0.5, anchor="center")
+
+        self.make_GUI()
         self.start_game()
 
-        #arrow direction 
-        self.master.bind("<Left>",self.left)
-        self.master.bind("<Right>",self.right)
-        self.master.bind("<Up>",self.up)
-        self.master.bind("<Down>",self.down)
+        # Bindings
+        self.ws.bind("<Configure>", self.resize_bg)
+        self.ws.bind("<Left>", self.left)
+        self.ws.bind("<Right>", self.right)
+        self.ws.bind("<Up>", self.up)
+        self.ws.bind("<Down>", self.down)
 
-        self.mainloop()
+        self.ws.mainloop()
+
+    def resize_bg(self, event):
+        # ✅ Resize the background to match window size
+        resized = self.original_bg.resize((event.width, event.height), Image.ANTIALIAS)
+        self.bg_photo = ImageTk.PhotoImage(resized)
+        self.bg_label.config(image=self.bg_photo)
+        self.bg_label.image = self.bg_photo
+        # Recenter grid
+        self.main_grid.place(relx=0.5, rely=0.5, anchor="center")
+
+
+
+
 
     def make_GUI(self):
         #make a grid :cells contains information of grid
@@ -232,27 +266,21 @@ class Game(tk.Frame):
         return False
 
     #Check if game is over (win/lose)
-    def game_over(self):
-        if any(2048 in row for row in self.matrix):
-            game_over_frame = tk.Frame(self.main_grid,borderwidth=2)
-            game_over_frame.place(relx=0.5,rely=0.5,anchor="center")
-            tk.Label(
-                game_over_frame,
-                text="You win!",
-                bg=c.WINNER_BG,
-                fg=c.GAME_OVER_FONT_COLOR,
-                font=c.GAME_OVER_FONT
-            ).pack()
-        elif not any(0 in row for row in self.matrix) and not self.horizontal_move_exists() and  not self.vertical_move_exists():
-            game_over_frame = tk.Frame(self.main_grid,borderwidth=2)
-            game_over_frame.place(relx=0.5,rely=0.5,anchor="center")
-            tk.Label(
-                game_over_frame,
-                text="Game over!",
-                bg=c.LOSER_BG,
-                fg=c.GAME_OVER_FONT_COLOR,
-                font=c.GAME_OVER_FONT
-            ).pack()
+    def game_over(self, won=False):
+        self.grid_cells[1][1].configure(text="")
+        game_over_frame = tk.Frame(self, borderwidth=0, highlightthickness=0, bg="", padx=0, pady=0)
+        game_over_frame.place(relx=0.5, rely=0.5, anchor="center")
+
+        # Load and place transparent PNG
+        img = Image.open("gameover.png").resize((250, 150), Image.Resampling.LANCZOS)
+        photo = ImageTk.PhotoImage(img)
+        label = tk.Label(game_over_frame, image=photo, borderwidth=0, highlightthickness=0, bg="")
+        label.image = photo  # Keep a reference
+        label.pack()
+
+        # Delay and then open play.py
+        self.after(2000, lambda: subprocess.Popen(["python", "play.py"]))  # Opens play.py
+        self.after(2000, self.destroy)  # Closes current game window
 
 
 def main():
@@ -260,5 +288,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-                    
-

@@ -1,5 +1,5 @@
 GRID_COLOR = "#454545"#"#a39489"
-EMPTY_CELL_COLOR = "#3a3b3c"#"#c2b3a9"#pure cell ka color
+EMPTY_CELL_COLOR = "#C19A6B"#"#c2b3a9"#pure cell ka color
 SCORE_LABEL_FONT = ("Verdana",23) #verdana,helvetica,arial,tahoma,calibri fonts are professional fonts
 SCORE_FONT = ("Helvetica",36,"bold")
 GAME_OVER_FONT = ("Helvetica",48,"bold")
